@@ -1,0 +1,29 @@
+{
+  "name": "@trullock/firebase",
+  "version": "0.2.0",
+  "description": "Collection of firebase helpers",
+  "homepage": "https://github.com/trullock/firebase#readme",
+  "bugs": {
+    "url": "https://github.com/trullock/firebase/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trullock/firebase.git"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "module": "./src/index.js",
+  "license": "MIT",
+  "author": "Trullock",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@trullock/pubsub": "^2.4.0"
+  }
+}
