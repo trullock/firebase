@@ -1,3 +1,6 @@
+import { logger } from 'firebase-functions'
+import { environment } from "../utils.js";
+
 let errorHandler = (m, ...d) => {
 	console.error(m, ...d,)
 };
@@ -35,4 +38,12 @@ export function setDebugHandler(handler) {
 export function debug(message, ...data)
 {
 	debugHandler(message, ...data);
+}
+
+if(environment() == 'prod')
+{
+	logger.setErrorHandler((m, ...d) => logger.error(m, ...d))
+	logger.setWarnHandler((m, ...d) => logger.warn(m, ...d))
+	logger.setLogHandler((m, ...d) => logger.log(m, ...d))
+	logger.setDebugHandler((m, ...d) => logger.debug(m, ...d))
 }

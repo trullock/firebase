@@ -1,21 +1,14 @@
 import { registerClassForPersistence, registerMapping, registerMigration } from "../src/index.js";
-
 import MyClass from "./MyClass.js";
 
-// Set up production logger
-import * as logger from '../src/logging/logger.js'
-import { environment } from "../src/utils";
-if(environment() == 'prod')
-{
-	logger.setErrorHandler((m, ...d) => functions.logger.error(m, ...d))
-	logger.setWarnHandler((m, ...d) => functions.logger.warn(m, ...d))
-	logger.setLogHandler((m, ...d) => functions.logger.log(m, ...d))
-	logger.setDebugHandler((m, ...d) => functions.logger.debug(m, ...d))
-}
+/////////////////////////////////////////////
 
 
 // Registers all classes you want to be (de)serialised to/from firestore
 registerClassForPersistence(MyClass);
+
+
+/////////////////////////////////////////////
 
 
 // Register custom (de)serialisation for Dates (which are properties on MyClass etc)
@@ -35,6 +28,9 @@ registerMapping((key, value) => {
 })
 
 
+/////////////////////////////////////////////
+
+
 // Migrate MyClass.nombre to MyClass.name
 registerMigration((key, parent, value, dest, type) => type == MyClass && key == 'nombre', (key, parent, value, dest, type) => {
 	dest.name = value;
@@ -44,5 +40,16 @@ registerMigration((key, parent, value, dest, type) => type == MyClass && key == 
 })
 
 
+/////////////////////////////////////////////
+
+
 // Import all event handlers - currently this has to be done manually
 import './eventHandler.js'
+
+
+/////////////////////////////////////////////
+
+// All domain events have an `occurredOn`, this is set automatically using the nowFn, if you dont want the default, you can override it.
+// The below is the default anyway, so you dont need this, but its shown here for completeness to show you how to override it
+import { setNowFn } from "../src/utils";
+setNowFn(() => new Date());

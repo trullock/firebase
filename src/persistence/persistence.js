@@ -1,6 +1,7 @@
 import { publish } from '@trullock/pubsub'
-import { convertFromFirestore, convertToFirestore } from '../lib/automapper.js'
-import { error } from './logger.js';
+import { error } from '../logging/logger.js';
+import { convertFromFirestore, convertToFirestore } from './automapper.js';
+
 
 export async function getEntity(firestore, pathSegments)
 {

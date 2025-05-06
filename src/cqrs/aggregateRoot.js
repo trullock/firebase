@@ -1,16 +1,10 @@
-import { v4 as newId } from "uuid";
-import DateTime from "../lib/dateTime.js";
+import { getNow } from "../utils.js";
 
 export default class AggregateRoot
 {
 	id = ''
 	#uncomittedEvents = []
 	lastEventSequence = -1
-
-	constructor()
-	{
-		this.id = newId();
-	}
 
 	get isDirty() {
 		return this.#uncomittedEvents.length > 0;
@@ -23,7 +17,7 @@ export default class AggregateRoot
 			data.aggregateRootId = this.id;
 
 		if(!data.occurredOn)
-			data.occurredOn = DateTime.now;
+			data.occurredOn = getNow();
 
 		this.#uncomittedEvents.push({
 			type: eventType,

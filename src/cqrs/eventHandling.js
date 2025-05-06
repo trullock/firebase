@@ -1,6 +1,6 @@
 import { subscribe, publish } from '@trullock/pubsub'
-import { log } from './logger.js'
 import { setErrorHandler, setLogger } from '@trullock/pubsub'
+import { log, debug, error } from '../logging/logger.js';
 
 
 export function registerEventHandler(name, type, handler)
@@ -14,10 +14,10 @@ export function publishEvent(type, event)
 	publish(type, event);
 }
 
-setErrorHandler((error, handler, args) =>
+setErrorHandler((e, handler, args) =>
 {
 	error('Error executing pubsub subscriber');
-	error(error);
+	error(e);
 	error(handler);
 	error(args);
 });
