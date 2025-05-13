@@ -21,7 +21,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { MyClass } from './myClass.js'
 const firestore = getFirestore();
 
-let myClass = await getEntity(firestore. [MyClass, '123'])
+let myClass = await getEntity(firestore, [MyClass, '123'])
 ```
 
 ### `saveEntity(firestore, entity, pathSegments)`
@@ -35,5 +35,5 @@ const firestore = getFirestore();
 
 let myClass = new MyClass();
 
-await saveEntity(firestore. myClass, [MyClass, '123'])
+await saveEntity(firestore, myClass, [MyClass, '123'])
 ```

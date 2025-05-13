@@ -36,8 +36,8 @@ function serialiseClassName(type)
 			return key;
 	}
 
-	throw new Error(`Could not serialize type ${type.name}. Did you call registerClassForPersistence() or have a registerMapping()?`);
-}true
+	throw new Error(`Could not serialize type ${type.name}. Did you call registerClassForPersistence() or registerMapping()?`);
+}
 
 function deserialiseClassName(name)
 {

@@ -1,6 +1,7 @@
 export default class MyClass
 {
 	id = null
+	// nombre = null; // Migrated to .name
 	name = null
 	createdOn = null
 

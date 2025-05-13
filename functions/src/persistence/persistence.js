@@ -1,6 +1,6 @@
 import { publish } from '@trullock/pubsub'
 import { error } from '../logging/logger.js';
-import { convertFromFirestore, convertToFirestore } from './automapper.js';
+import { convertFromFirestore, convertToFirestore, firestorePath } from '@trullock/firebase-common';
 
 
 export async function getEntity(firestore, pathSegments)
@@ -80,17 +80,6 @@ export async function getSingletonProjection(firestore, type)
 	return converted;
 }
 
-export function firestorePath(pathSegments)
-{
-	let segemnts = pathSegments.map((a, i) => {
-		if(i % 2 == 0)
-			return a.name;
-		return a;
-	});
-
-	return segemnts.join('/');
-}
-
 export async function queryProjections(firestore, pathSegments, filter)
 {
 	let snap = await filter(firestore.collection(firestorePath(pathSegments))).get();
@@ -145,23 +134,4 @@ export function deleteProjection(firestore, pathSegments, deleteChildren)
 		return firestore.doc(path).deleteRecursive();
 	else
 		return firestore.doc(path).delete();
-}
-
-export function explainError(e, message)
-{
-	if(e.name == 'FirebaseError')
-	{
-		if(e.code == 'permission-denied')
-		{
-			if(e.message.indexOf(' for \'list\' @ ') > -1)
-				return new Error('Firestore permissions error when getting collection\n' + message);
-
-			if(e.message.indexOf(' for \'get\' @ ') > -1)
-				return new Error('Firestore permissions error when getting document\n' + message);
-
-			return new Error('Firestore permissions error: ' + e.message + '\n' + message);
-		}
-	}
-
-	return e;
 }

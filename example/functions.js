@@ -1,4 +1,4 @@
-import { registerClassForPersistence, registerMapping, registerMigration } from "../src/index.js";
+import { registerClassForPersistence, registerMapping, registerMigration } from "../functions/src/index.js";
 import MyClass from "./MyClass.js";
 
 /////////////////////////////////////////////
@@ -51,5 +51,5 @@ import './eventHandler.js'
 
 // All domain events have an `occurredOn`, this is set automatically using the nowFn, if you dont want the default, you can override it.
 // The below is the default anyway, so you dont need this, but its shown here for completeness to show you how to override it
-import { setNowFn } from "../src/utils";
+import { setNowFn } from "../functions/src/utils.js";
 setNowFn(() => new Date());
