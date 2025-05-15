@@ -46,10 +46,3 @@ registerMigration((key, parent, value, dest, type) => type == MyClass && key == 
 // Import all event handlers - currently this has to be done manually
 import './eventHandler.js'
 
-
-/////////////////////////////////////////////
-
-// All domain events have an `occurredOn`, this is set automatically using the nowFn, if you dont want the default, you can override it.
-// The below is the default anyway, so you dont need this, but its shown here for completeness to show you how to override it
-import { setNowFn } from "../functions/src/utils.js";
-setNowFn(() => new Date());

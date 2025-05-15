@@ -5,24 +5,21 @@ export default class MyClass
 	name = null
 	createdOn = null
 
-	static create(issuingUserId, id, name, createdOn)
+	static create(ctx, id, name)
 	{
 		const myClass = new MyClass();
-		myClass.#create(issuingUserId, id, name, createdOn);
+		myClass.#create(ctx, id, name);
 		return myClass;
 	}
 
-	#create(issuingUserId, id, name, createdOn)
+	#create(ctx, id, name)
 	{
 		this.apply('myClassCreated', {
 			// aggregateRootId gets sets for all events automatically except on creation, as we dont have an id yet, so set it manually
 			aggregateRootId: id,
-			// occurredOn is automatically set if not manually provided
-			occurredOn: createdOn,
 			// everything else is domain specific info...
-			issuingUserId,
 			name
-		})
+		}, ctx)
 	}
 
 	onMyClassCreated(event)

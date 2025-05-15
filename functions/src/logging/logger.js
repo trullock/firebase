@@ -42,8 +42,8 @@ export function debug(message, ...data)
 
 if(environment() == 'prod')
 {
-	logger.setErrorHandler((m, ...d) => logger.error(m, ...d))
-	logger.setWarnHandler((m, ...d) => logger.warn(m, ...d))
-	logger.setLogHandler((m, ...d) => logger.log(m, ...d))
-	logger.setDebugHandler((m, ...d) => logger.debug(m, ...d))
+	setErrorHandler((m, ...d) => logger.error(m, ...d))
+	setWarnHandler((m, ...d) => logger.warn(m, ...d))
+	setLogHandler((m, ...d) => logger.log(m, ...d))
+	setDebugHandler((m, ...d) => logger.debug(m, ...d))
 }
