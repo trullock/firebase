@@ -28,18 +28,24 @@ export function registerMigration(shouldApply, apply)
 	})
 }
 
-function serialiseClassName(type)
+function getClassMappingByType(type)
 {
 	for(let [key, value] of Object.entries(classes))
 	{
-		if(type == value)
-			return key;
+		if(type == value.type)
+		{
+			return {
+				name: key,
+				type,
+				getters: value.getters
+			};
+		}
 	}
 
 	throw new Error(`Could not serialize type ${type.name}. Did you call registerClassForPersistence() or registerMapping()?`);
 }
 
-function deserialiseClassName(name)
+function getClassMappingByName(name)
 {
 	return classes[name] || null
 }
@@ -47,22 +53,29 @@ function deserialiseClassName(name)
 /**
  * Register a class with AutoMapper for persistence
  * @param {Class} type The type of the class
- * @param {string} name Optional: The name of the class. Leave blank to use the class' name+namespace. Beware minifiers can mangle class names and create dev/prod inconsistencies/issues
- * @param {string} parent Optional: The name of the parent class, if present
+ * @param {Array} name O
  */
-export function registerClassForPersistence(type, name, parent)
+export function registerClassForPersistence(type, persistedGetters)
+{
+	return doRegisterClassForPersistence(type, null, null, persistedGetters || [])
+}
+
+function doRegisterClassForPersistence(type, name, parent, persistedGetters)
 {
 	let key = name ? name : type.name;
 	if(parent)
 		key = parent + '.' + name;
 
-	classes[key] = type;
+	classes[key] = {
+		type,
+		getters: persistedGetters.filter(pg => pg.type == type).map(pg => pg.property)
+	};
 
 	// static nested classes
 	for(let [k, value] of Object.entries(type))
 	{
 		if(value?.toString()?.substr(0, 5) == 'class')
-			registerClassForPersistence(value, k, key)
+			doRegisterClassForPersistence(value, k, key, persistedGetters)
 	}
 }
 
@@ -114,7 +127,30 @@ export function autoMapToFirestore(obj)
 		let retval = {};
 
 		if(obj.constructor.toString()?.substr(0, 5) == 'class')
-			retval._type = serialiseClassName(obj.constructor)
+		{
+			let mapping = getClassMappingByType(obj.constructor)
+			retval._type = mapping.name
+
+			for(let getter of mapping.getters)
+			{
+				let value = obj[getter];
+
+				let mapped = false;
+				for(let mapping of mappings)
+				{
+					let result = mapping.toFirestore(getter, value)
+					if(result !== undefined)
+					{
+						retval[getter] = result;
+						mapped = true;
+						break;
+					}
+				}
+
+				if(!mapped)
+					retval[getter] = autoMapToFirestore(value);
+			}
+		}
 
 		for(let [key, value] of Object.entries(obj))
 		{
@@ -156,21 +192,12 @@ export function autoMapFromFirestore(obj)
 	if(obj?.constructor == Object)
 	{
 		let dest = {};
-
-		let type = null;
+		let mapping = null;
 
 		if(obj._type)
 		{
-			type = deserialiseClassName(obj._type)
-			
-			try
-			{
-				dest = new type();
-			}
-			catch(e)
-			{
-				dest = {};
-			}
+			mapping = getClassMappingByName(obj._type)
+			dest = new mapping.type();
 		}
 
 		for(let [key, value] of Object.entries(obj))
@@ -178,12 +205,15 @@ export function autoMapFromFirestore(obj)
 			if(key == '_type')
 				continue;
 			
+			if(mapping?.getters?.indexOf(key) > -1)
+				continue;
+
 			for(let migration of migrations)
 			{
-				if(!migration.shouldApply(key, obj, value, dest, type))
+				if(!migration.shouldApply(key, obj, value, dest, mapping?.type))
 					continue;
 
-				value = migration.apply(key, obj, value, dest, type);
+				value = migration.apply(key, obj, value, dest, mapping?.type);
 			}
 
 			let handled = false;
