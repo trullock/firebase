@@ -7,9 +7,22 @@ let errorHandler = (m, ...d) => {
 export function setErrorHandler(handler) {
 	errorHandler = handler;
 }
-export function error(message, ...data)
+export function error(message, data)
 {
-	errorHandler(message, ...data);
+	if(data)
+	{
+		for(let key of Object.keys(data))
+		{
+			if(data[key] instanceof Error)
+			{
+				data[key + '_Type'] = data[key].constructor.name;
+				data[key + '_Name'] = data[key].name;
+				data[key + '_Message'] = data[key].message;
+				data[key + '_Stack'] = data[key].stack;
+			}
+		}
+	}
+	errorHandler(message, data);
 }
 
 let logHandler = (m, ...d) => console.log(m, ...d);
