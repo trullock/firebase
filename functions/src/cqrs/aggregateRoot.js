@@ -77,6 +77,6 @@ export default class AggregateRoot
 	 */
 	setContext(ctx)
 	{
-		this.ctx = ctx;
+		this.#ctx = ctx;
 	}
 }
