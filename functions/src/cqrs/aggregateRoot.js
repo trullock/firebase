@@ -75,7 +75,7 @@ export default class AggregateRoot
 	 * Sets the context for this unit of work
 	 * @param {object} ctx Context object
 	 */
-	setCtx(ctx)
+	setContext(ctx)
 	{
 		this.ctx = ctx;
 	}
