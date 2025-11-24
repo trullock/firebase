@@ -2,10 +2,11 @@ import { publish } from '@trullock/pubsub'
 import { error } from '../logging/logger.js';
 import { convertFromFirestore, convertToFirestore, firestorePath } from '@trullock/firebase-common';
 
-
-export async function getEntity(firestore, pathSegments)
+export async function getEntity(firestore, pathSegments, ctx)
 {
-	return getDocument(firestore, pathSegments);
+	let entity = await getDocument(firestore, pathSegments);
+	entity.setContext(ctx);
+	return entity;
 }
 
 let recursePromises = function(results)

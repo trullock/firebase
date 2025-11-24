@@ -2,6 +2,7 @@ export default class AggregateRoot
 {
 	id = ''
 	#uncomittedEvents = []
+	#ctx = null;
 	lastEventSequence = -1
 
 	/**
@@ -22,6 +23,8 @@ export default class AggregateRoot
 		data = data || {}
 		if(!data.aggregateRootId)
 			data.aggregateRootId = this.id;
+
+		ctx = ctx || this.#ctx
 
 		if(!ctx)
 			throw new Error('`ctx` is required')
@@ -66,5 +69,14 @@ export default class AggregateRoot
 		let events = this.#uncomittedEvents;
 		this.#uncomittedEvents = [];
 		return events;
+	}
+
+	/**
+	 * Sets the context for this unit of work
+	 * @param {object} ctx Context object
+	 */
+	setCtx(ctx)
+	{
+		this.ctx = ctx;
 	}
 }
