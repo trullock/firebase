@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-functions",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Collection of firebase helpers",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
@@ -26,6 +26,7 @@
   "dependencies": {
     "@trullock/firebase-common": "^1.0.0",
     "@trullock/pubsub": "^2.4.0",
-    "firebase-functions": "^6.3.2"
+    "firebase-functions": "^6.3.2",
+    "ical-generator": "^9.0.0"
   }
 }
