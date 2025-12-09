@@ -156,38 +156,44 @@ export async function listenForProjections(pathSegments, array, callback)
 	let db = getFirestore();
 	let ref = collection(db, firestorePath(pathSegments));
 
-	const unsubscribe = onSnapshot(ref, async snapshot => {
-		let changes = snapshot.docChanges();
-		changes.forEach(change => {
-			const { newIndex, oldIndex, doc, type } = change
-			if (type === 'added') {
-				array.splice(newIndex, 0, convertFromFirestore(doc.data()))
-				// if we want to handle references we would do it here
-			} else if (type === 'modified') {
-				let newData = convertFromFirestore(doc.data());
-				// we have to do this in case the array has been sorted outside of our control
-				let prevIndex = array.findIndex(a => a.id == doc.ref.id)
-				// remove the old one first
-				array.splice(prevIndex, 1)
-				// if we want to handle references we would have to unsubscribe
-				// from old references' listeners and subscribe to the new ones
-				// if we have been sorted outside our control, newIndex will unlikely be correct, so you'll need to use the callback to re-sort
-				array.splice(newIndex, 0, newData)
-			} else if (type === 'removed') {
-				// we have to do this in case the array has been sorted outside of our control
-				let index = array.findIndex(a => a.id == doc.ref.id)
-				array.splice(index, 1)
-				// if we want to handle references we need to unsubscribe
-				// from old references
+	let firstCall = true;
+	return new Promise((resolve, reject) => {
+		const unsubscribe = onSnapshot(ref, async snapshot => {
+			let changes = snapshot.docChanges();
+			changes.forEach(change => {
+				const { newIndex, oldIndex, doc, type } = change
+				if (type === 'added') {
+					array.splice(newIndex, 0, convertFromFirestore(doc.data()))
+					// if we want to handle references we would do it here
+				} else if (type === 'modified') {
+					let newData = convertFromFirestore(doc.data());
+					// we have to do this in case the array has been sorted outside of our control
+					let prevIndex = array.findIndex(a => a.id == doc.ref.id)
+					// remove the old one first
+					array.splice(prevIndex, 1)
+					// if we want to handle references we would have to unsubscribe
+					// from old references' listeners and subscribe to the new ones
+					// if we have been sorted outside our control, newIndex will unlikely be correct, so you'll need to use the callback to re-sort
+					array.splice(newIndex, 0, newData)
+				} else if (type === 'removed') {
+					// we have to do this in case the array has been sorted outside of our control
+					let index = array.findIndex(a => a.id == doc.ref.id)
+					array.splice(index, 1)
+					// if we want to handle references we need to unsubscribe
+					// from old references
+				}
+			});
+			if(callback)
+				await Promise.resolve(callback(array, changes));
+			if(firstCall)
+			{
+				resolve(unsubscribe);
+				firstCall = false;
 			}
+		}, e => {
+			reject(explainError(e, `Listening to collection ${ref}`))
 		});
-		if(callback)
-			await Promise.resolve(callback(array, changes));
-	}, e => {
-		throw explainError(e, `Listening to collection ${ref}`);
 	});
-
-	return unsubscribe;
 }
 
 export async function listenForFoundProjections(pathSegments, where, array, callback)
@@ -196,33 +202,40 @@ export async function listenForFoundProjections(pathSegments, where, array, call
 	let ref = collection(db, firestorePath(pathSegments));
 	let q = Array.isArray(where) ? query(ref, ...where) : query(ref, where);
 
-	const unsubscribe = onSnapshot(q, async snapshot => {
-		let changes = snapshot.docChanges();
-		changes.forEach(change => {
-			const { newIndex, oldIndex, doc, type } = change
-			if (type === 'added') {
-				array.splice(newIndex, 0, convertFromFirestore(doc.data()))
-				// if we want to handle references we would do it here
-			} else if (type === 'modified') {
-				// remove the old one first
-				array.splice(oldIndex, 1)
-				// if we want to handle references we would have to unsubscribe
-				// from old references' listeners and subscribe to the new ones
-				array.splice(newIndex, 0, convertFromFirestore(doc.data()))
-			} else if (type === 'removed') {
-				array.splice(oldIndex, 1)
-				// if we want to handle references we need to unsubscribe
-				// from old references
+	let firstCall = true;
+	return new Promise((resolve, reject) => {
+		const unsubscribe = onSnapshot(q, async snapshot => {
+			let changes = snapshot.docChanges();
+			changes.forEach(change => {
+				const { newIndex, oldIndex, doc, type } = change
+				if (type === 'added') {
+					array.splice(newIndex, 0, convertFromFirestore(doc.data()))
+					// if we want to handle references we would do it here
+				} else if (type === 'modified') {
+					// remove the old one first
+					array.splice(oldIndex, 1)
+					// if we want to handle references we would have to unsubscribe
+					// from old references' listeners and subscribe to the new ones
+					array.splice(newIndex, 0, convertFromFirestore(doc.data()))
+				} else if (type === 'removed') {
+					array.splice(oldIndex, 1)
+					// if we want to handle references we need to unsubscribe
+					// from old references
+				}
+			});
+			if(callback)
+				await Promise.resolve(callback(array, changes));
+			if(firstCall)
+			{
+				resolve(unsubscribe);
+				firstCall = false;
 			}
+		}, e => {
+			reject(explainError(e, `Listening to collection ${ref}`))
 		});
-		if(callback)
-			await Promise.resolve(callback(array, changes));
-	}, e => {
-		throw explainError(e, `Listening to collection ${ref}`);
 	});
-
-	return unsubscribe;
 }
+
 
 export function explainError(e, message)
 {
