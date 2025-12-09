@@ -190,13 +190,13 @@ export async function listenForProjections(pathSegments, array, callback)
 	return unsubscribe;
 }
 
-export async function listenForFoundProjections(pathSegments, where, array)
+export async function listenForFoundProjections(pathSegments, where, array, callback)
 {
 	let db = getFirestore();
 	let ref = collection(db, firestorePath(pathSegments));
 	let q = Array.isArray(where) ? query(ref, ...where) : query(ref, where);
 
-	const unsubscribe = onSnapshot(q, snapshot => {
+	const unsubscribe = onSnapshot(q, async snapshot => {
 		snapshot.docChanges().forEach(change => {
 			const { newIndex, oldIndex, doc, type } = change
 			if (type === 'added') {
@@ -214,6 +214,8 @@ export async function listenForFoundProjections(pathSegments, where, array)
 				// from old references
 			}
 		});
+		if(callback)
+			await Promise.resolve(callback(array, changes));
 	}, e => {
 		throw explainError(e, `Listening to collection ${ref}`);
 	});
