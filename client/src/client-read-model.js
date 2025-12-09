@@ -197,7 +197,8 @@ export async function listenForFoundProjections(pathSegments, where, array, call
 	let q = Array.isArray(where) ? query(ref, ...where) : query(ref, where);
 
 	const unsubscribe = onSnapshot(q, async snapshot => {
-		snapshot.docChanges().forEach(change => {
+		let changes = snapshot.docChanges();
+		changes.forEach(change => {
 			const { newIndex, oldIndex, doc, type } = change
 			if (type === 'added') {
 				array.splice(newIndex, 0, convertFromFirestore(doc.data()))
