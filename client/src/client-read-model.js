@@ -194,7 +194,7 @@ export async function listenForFoundProjections(pathSegments, where, array)
 {
 	let db = getFirestore();
 	let ref = collection(db, firestorePath(pathSegments));
-	let q = query(ref, where);
+	let q = Array.isArray(where) ? query(ref, ...where) : query(ref, where);
 
 	const unsubscribe = onSnapshot(q, snapshot => {
 		snapshot.docChanges().forEach(change => {
