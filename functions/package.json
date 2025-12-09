@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-functions",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Collection of firebase helpers",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {

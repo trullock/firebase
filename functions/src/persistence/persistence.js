@@ -9,6 +9,18 @@ export async function getEntity(firestore, pathSegments, ctx)
 	return entity;
 }
 
+export async function getAllEntities(firestore, pathSegments, ctx)
+{
+	let snap = await firestore.collection(firestorePath(pathSegments)).get();
+	let results = snap.docs.map(d => {
+		let doc = d.data();
+		let entity = convertFromFirestore(doc);
+		entity.setContext(ctx);
+		return entity;
+	})
+	return results;
+}
+
 let recursePromises = function(results)
 {
 	results.forEach(r => {
