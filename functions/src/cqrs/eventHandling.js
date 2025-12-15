@@ -21,7 +21,7 @@ export function registerEventHandler(name, type, handler)
 export function publishEvent(type, event)
 {
 	debug(`Publishing event ${type}`, event)
-	publish(type, event);
+	return publish(type, event);
 }
 
 setErrorHandler((e, handler, args) =>

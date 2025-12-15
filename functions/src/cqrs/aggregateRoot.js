@@ -1,15 +1,15 @@
 export default class AggregateRoot
 {
 	id = ''
-	#uncomittedEvents = []
-	#ctx = null;
-	lastEventSequence = -1
+	_uncomittedEvents = []
+	_ctx = null;
+	_lastEventSequence = -1
 
 	/**
 	 * Does the entity have uncommitted events
 	 */
 	get isDirty() {
-		return this.#uncomittedEvents.length > 0;
+		return this._uncomittedEvents.length > 0;
 	}
 
 	/**
@@ -24,7 +24,7 @@ export default class AggregateRoot
 		if(!data.aggregateRootId)
 			data.aggregateRootId = this.id;
 
-		ctx = ctx || this.#ctx
+		ctx = ctx || this._ctx
 
 		if(!ctx)
 			throw new Error('`ctx` is required')
@@ -43,16 +43,16 @@ export default class AggregateRoot
 			throw new Error('`ctx` must contain a value for issuingUserId')
 		data.issuingUserId = ctx.issuingUserId;
 
-		this.#uncomittedEvents.push({
+		this._uncomittedEvents.push({
 			type: eventType,
-			sequence: ++this.lastEventSequence,
+			sequence: ++this._lastEventSequence,
 			data
 		});
 		
-		this.#applyEvent(eventType, data);
+		this._applyEvent(eventType, data);
 	}
 
-	#applyEvent(eventType, data)
+	_applyEvent(eventType, data)
 	{
 		let handlerName = 'on' + eventType.substr(0, 1).toUpperCase() + eventType.substr(1);
 		let fn = this[handlerName];
@@ -66,8 +66,8 @@ export default class AggregateRoot
 	 */
 	commitEvents()
 	{
-		let events = this.#uncomittedEvents;
-		this.#uncomittedEvents = [];
+		let events = this._uncomittedEvents;
+		this._uncomittedEvents = [];
 		return events;
 	}
 
@@ -77,6 +77,6 @@ export default class AggregateRoot
 	 */
 	setContext(ctx)
 	{
-		this.#ctx = ctx;
+		this._ctx = ctx;
 	}
 }
