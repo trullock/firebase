@@ -132,14 +132,22 @@ export async function listenToProjection(pathSegments, callback)
 			// 	return;
 			// }
 
-			await Promise.resolve(callback(data, firstCall));
+			try
+			{
+				await Promise.resolve(callback(data, firstCall));
+			}
+			catch(e)
+			{
+				reject(explainError(e, `Listening to document ${path}`));
+			}
+
 			if(firstCall)
 			{
 				resolve(unsubscribe);
 				firstCall = false;
 			}
 		}, e => {
-			throw explainError(e, `Listening to document ${path}`);
+			reject(explainError(e, `Listening to document ${path}`));
 		});
 	});
 }
@@ -183,8 +191,19 @@ export async function listenForProjections(pathSegments, array, callback)
 					// from old references
 				}
 			});
+
 			if(callback)
-				await Promise.resolve(callback(array, changes));
+			{
+				try
+				{
+					await Promise.resolve(callback(array, changes));
+				}
+				catch(e)
+				{
+					reject(explainError(e, `Listening to collection ${ref}`))
+				}
+			}
+
 			if(firstCall)
 			{
 				resolve(unsubscribe);
@@ -224,7 +243,17 @@ export async function listenForFoundProjections(pathSegments, where, array, call
 				}
 			});
 			if(callback)
-				await Promise.resolve(callback(array, changes));
+			{
+				try
+				{
+					await Promise.resolve(callback(array, changes));
+				}
+				catch(e)
+				{
+					reject(explainError(e, `Listening to collection ${ref}`))
+				}
+			}
+
 			if(firstCall)
 			{
 				resolve(unsubscribe);
