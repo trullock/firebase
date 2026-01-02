@@ -1,7 +1,13 @@
 import { getFirestore, doc, getDoc, collection, getDocs, query, onSnapshot, where, documentId } from 'firebase/firestore'
 import { convertFromFirestore, chunk, firestorePath } from '@trullock/firebase-common'
 
-export async function getProjection(pathSegments)
+/**
+ * Gets a projection by its path
+ * @param {string} pathSegments Path to the projection to listen to
+ * @param {boolean} throwOnNonExist Throws if the data doesnt exist
+ * @returns 
+ */
+export async function getProjection(pathSegments, throwOnNonExist = true)
 {
 	let db = getFirestore();
 	let path = firestorePath(pathSegments);
@@ -17,7 +23,15 @@ export async function getProjection(pathSegments)
 		throw explainError(e, `Failed to get ${path}`);
 	}
 
-	let data = snap.exists() ? convertFromFirestore(snap.data()) : null;
+	if(!snap.exists())
+	{
+		if(throwOnNonExist)
+			throw new Error(`Document '${path}' not found`)
+		
+		return null;
+	}
+
+	let data = convertFromFirestore(snap.data());
 	return data;
 }
 
@@ -43,12 +57,13 @@ export async function getAllProjectionsInCollection(pathSegments)
 	return snap.docs.map(d => convertFromFirestore(d.data()));
 }
 
-export async function findProjection(pathSegments, where)
+export async function findProjection(pathSegments, constraints)
 {
 	let db = getFirestore();
 	let path = firestorePath(pathSegments);
 	let ref = collection(db, path);
-	let q = query(ref, where);
+	let q = Array.isArray(constraints) ? query(ref, ...constraints) : query(ref, constraints);
+
 	let snap = null;
 	try
 	{
@@ -64,14 +79,12 @@ export async function findProjection(pathSegments, where)
 	return null;
 }
 
-export async function findProjections(pathSegments, wheres)
+export async function findProjections(pathSegments, constraints)
 {
 	let db = getFirestore();
 	let path = firestorePath(pathSegments);
 	let ref = collection(db, path);
-	if(!Array.isArray(wheres))
-		wheres = [wheres]
-	let q = query(ref, ...wheres);
+	let q = Array.isArray(constraints) ? query(ref, ...constraints) : query(ref, constraints);
 	let snap = null;
 	try
 	{
@@ -112,9 +125,10 @@ export async function listenToSingletonProjection(type, callback)
  * Listens to changes on a single projection
  * @param {string} pathSegments Path to the projection to listen to
  * @param {function} callback callback(projection, isFirstCall)
+ * @param {boolean} rejectOnNonExist Reject the returned promise if the data doesnt exist
  * @returns 
  */
-export async function listenToProjection(pathSegments, callback)
+export async function listenToProjection(pathSegments, callback, rejectOnNonExist = true)
 {
 	let db = getFirestore();
 	let path = firestorePath(pathSegments);
@@ -124,13 +138,12 @@ export async function listenToProjection(pathSegments, callback)
 		const unsubscribe = onSnapshot(ref, async doc => {
 			let data = convertFromFirestore(doc.data())
 
-			// BUG: this breaks signup where the auth state changes but the user[view/lite] hasnt yet been created
-			// if(firstCall && !data)
-			// {
-			// 	reject(`${path} not found (null)`);
-			// 	unsubscribe();
-			// 	return;
-			// }
+			if(rejectOnNonExist && firstCall && !data)
+			{
+				reject(new Error(`Document '${path}' not found`));
+				unsubscribe && unsubscribe();
+				return;
+			}
 
 			try
 			{
@@ -138,7 +151,7 @@ export async function listenToProjection(pathSegments, callback)
 			}
 			catch(e)
 			{
-				reject(explainError(e, `Listening to document ${path}`));
+				reject(explainError(e, `Listening to document '${path}'`));
 			}
 
 			if(firstCall)
@@ -147,7 +160,7 @@ export async function listenToProjection(pathSegments, callback)
 				firstCall = false;
 			}
 		}, e => {
-			reject(explainError(e, `Listening to document ${path}`));
+			reject(explainError(e, `Listening to document '${path}'`));
 		});
 	});
 }
@@ -215,11 +228,11 @@ export async function listenForProjections(pathSegments, array, callback)
 	});
 }
 
-export async function listenForFoundProjections(pathSegments, where, array, callback)
+export async function listenForFoundProjections(pathSegments, constraints, array, callback)
 {
 	let db = getFirestore();
 	let ref = collection(db, firestorePath(pathSegments));
-	let q = Array.isArray(where) ? query(ref, ...where) : query(ref, where);
+	let q = Array.isArray(constraints) ? query(ref, ...constraints) : query(ref, constraints);
 
 	let firstCall = true;
 	return new Promise((resolve, reject) => {
