@@ -4,7 +4,7 @@ let mappings = [];
 /**
  * 
  * @param {function} toFirestore A function of the form (key: string, value: object/primitive) => object/primitive. Return a mapped value or undefined to fallback to default mapping
- * @param {funciton} fromFirestore A function of the form (key: string, value: object/primitive) => object/primitive. Return a mapped value or undefined to fallback to default mapping
+ * @param {function} fromFirestore A function of the form (key: string, value: object/primitive) => object/primitive. Return a mapped value or undefined to fallback to default mapping
  */
 export function registerMapping(toFirestore, fromFirestore)
 {

@@ -116,9 +116,9 @@ export async function getProjectionsById(pathSegments, ids)
 	return projections;
 }
 
-export async function listenToSingletonProjection(type, callback)
+export async function listenToSingletonProjection(type, callback, rejectOnNonExist = true)
 {
-	return listenToProjection(`singletons/${type.name}`, callback)
+	return listenToProjection(`singletons/${type.name}`, callback, rejectOnNonExist)
 }
 
 /**
@@ -179,7 +179,7 @@ export async function listenForProjections(pathSegments, array, callback)
 
 	let firstCall = true;
 	return new Promise((resolve, reject) => {
-		const unsubscribe = onSnapshot(ref, async snapshot => {
+		const unsubscribe = onSnapshot(ref, { includeMetadataChanges: true }, async snapshot => {
 			let changes = snapshot.docChanges();
 			changes.forEach(change => {
 				const { newIndex, oldIndex, doc, type } = change
@@ -205,22 +205,28 @@ export async function listenForProjections(pathSegments, array, callback)
 				}
 			});
 
-			if(callback)
+			// https://firebase.google.com/docs/reference/js/v8/firebase.firestore.SnapshotMetadata#fromcache
+			// https://stackoverflow.com/questions/71551480/how-does-snapshot-with-events-for-metadata-changes-differs-than-normal-snapsho
+			// https://github.com/firebase/firebase-js-sdk/issues/5629#issuecomment-945010156
+			if(!snapshot.metadata.fromCache)
 			{
-				try
+				if(callback)
 				{
-					await Promise.resolve(callback(array, changes));
+					try
+					{
+						await Promise.resolve(callback(array, changes, firstCall));
+					}
+					catch(e)
+					{
+						reject(explainError(e, `Listening to collection ${ref}`))
+					}
 				}
-				catch(e)
-				{
-					reject(explainError(e, `Listening to collection ${ref}`))
-				}
-			}
 
-			if(firstCall)
-			{
-				resolve(unsubscribe);
-				firstCall = false;
+				if(firstCall)
+				{
+					resolve(unsubscribe);
+					firstCall = false;
+				}
 			}
 		}, e => {
 			reject(explainError(e, `Listening to collection ${ref}`))
@@ -236,7 +242,7 @@ export async function listenForFoundProjections(pathSegments, constraints, array
 
 	let firstCall = true;
 	return new Promise((resolve, reject) => {
-		const unsubscribe = onSnapshot(q, async snapshot => {
+		const unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, async snapshot => {
 			let changes = snapshot.docChanges();
 			changes.forEach(change => {
 				const { newIndex, oldIndex, doc, type } = change
@@ -255,22 +261,29 @@ export async function listenForFoundProjections(pathSegments, constraints, array
 					// from old references
 				}
 			});
-			if(callback)
-			{
-				try
-				{
-					await Promise.resolve(callback(array, changes));
-				}
-				catch(e)
-				{
-					reject(explainError(e, `Listening to collection ${ref}`))
-				}
-			}
 
-			if(firstCall)
+			// https://firebase.google.com/docs/reference/js/v8/firebase.firestore.SnapshotMetadata#fromcache
+			// https://stackoverflow.com/questions/71551480/how-does-snapshot-with-events-for-metadata-changes-differs-than-normal-snapsho
+			// https://github.com/firebase/firebase-js-sdk/issues/5629#issuecomment-945010156
+			if(!snapshot.metadata.fromCache)
 			{
-				resolve(unsubscribe);
-				firstCall = false;
+				if(callback)
+				{
+					try
+					{
+						await Promise.resolve(callback(array, changes, firstCall));
+					}
+					catch(e)
+					{
+						reject(explainError(e, `Listening to collection ${ref}`))
+					}
+				}
+
+				if(firstCall)
+				{
+					resolve(unsubscribe);
+					firstCall = false;
+				}
 			}
 		}, e => {
 			reject(explainError(e, `Listening to collection ${ref}`))

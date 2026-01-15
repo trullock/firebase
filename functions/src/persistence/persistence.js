@@ -43,6 +43,10 @@ export async function saveEntity(firestore, entity, pathSegments)
 	let path = firestorePath(pathSegments);
 
 	let converted = convertToFirestore(entity);
+	
+	// remove context object
+	delete converted._ctx
+
 	batch.set(firestore.doc(path), converted);
 	
 	for(let i = 0; i < events.length; i++)
@@ -126,19 +130,6 @@ export async function saveSingletonProjection(firestore, projection)
 	let converted = convertToFirestore(projection);
 	await firestore.doc(path).set(converted);
 }
-
-// export async function saveProjections(firestore, projections)
-// {
-// 	let batch = firestore.batch();
-// 	for(var projection of projections)
-// 	{
-// 		let converted = convertToFirestore(projection);
-// 		let path = `${projection.constructor.name}/${projection.id}`;
-// 		let ref = firestore.doc(path);
-// 		batch.set(ref, converted)
-// 	}
-// 	await batch.commit();
-// }
 
 export function deleteProjection(firestore, pathSegments, deleteChildren)
 {
