@@ -26,10 +26,7 @@ export function publishEvent(type, event)
 
 setErrorHandler((e, handler, args) =>
 {
-	error('Error executing pubsub subscriber');
-	error(e);
-	error(handler);
-	error(args);
+	error('Error executing pubsub subscriber', { error: e, handler, args});
 });
 
 setLogger((message, args) =>

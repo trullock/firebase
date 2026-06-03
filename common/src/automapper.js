@@ -60,6 +60,23 @@ export function registerClassForPersistence(type, persistedGetters)
 	return doRegisterClassForPersistence(type, null, null, persistedGetters || [])
 }
 
+function getAllStaticProps(type) {
+    const props = [];
+    let current = type;
+    while (current && current !== Function.prototype)
+		{
+        Object.getOwnPropertyNames(current)
+            .filter(p => !['length', 'name', 'prototype'].includes(p))
+            .forEach(p => props.push({
+				name: p,
+				value: Object.getOwnPropertyDescriptor(current, p).value
+			}));
+			
+        current = Object.getPrototypeOf(current);
+    }
+    return props;
+}
+
 function doRegisterClassForPersistence(type, name, parent, persistedGetters)
 {
 	let key = name ? name : type.name;
@@ -72,10 +89,11 @@ function doRegisterClassForPersistence(type, name, parent, persistedGetters)
 	};
 
 	// static nested classes
-	for(let [k, value] of Object.entries(type))
+	let props = getAllStaticProps(type);
+	for(let prop of props)
 	{
-		if(value?.toString()?.substr(0, 5) == 'class')
-			doRegisterClassForPersistence(value, k, key, persistedGetters)
+		if(prop.value?.toString()?.substr(0, 5) == 'class')
+			doRegisterClassForPersistence(prop.value, prop.name, key, persistedGetters)
 	}
 }
 
