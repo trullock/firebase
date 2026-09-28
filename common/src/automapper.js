@@ -225,7 +225,7 @@ export function autoMapFromFirestore(obj)
 				key,
 				value,
 				parent: obj,
-				destination: dest, 
+				dest, 
 				type: mapping?.type
 			}
 
@@ -251,7 +251,7 @@ export function autoMapFromFirestore(obj)
 				let result = mapping.fromFirestore(prop.key, prop.value, prop.dest)
 				if(result !== undefined)
 				{
-					prop.destination[prop.key] = result;
+					prop.dest[prop.key] = result;
 					handled = true;
 					break;
 				}
@@ -261,7 +261,7 @@ export function autoMapFromFirestore(obj)
 			{
 				let result = autoMapFromFirestore(prop.value);
 				if(result != undefined)
-					prop.destination[prop.key] = result;
+					prop.dest[prop.key] = result;
 			}
 		}
 
