@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert";
-import { autoMapFromFirestore, autoMapToFirestore, registerClassForPersistence, registerMigration } from "../src/automapper.js";
+import { autoMapFromFirestore, autoMapToFirestore, registerClassForPersistence, registerMigration, registerMapping } from "../src/automapper.js";
 import { Mixins } from "../src/utils.js";
 
 class AggregateRoot
@@ -70,6 +70,10 @@ class Baz extends Foo {
 
 class Academy extends Mixins([Baz, AggregateRoot])
 {
+	static Test = class {}
+
+	uniqueList = new Set();
+
 	changeName(name)
 	{
 		this.apply('academyNameChanged', {
@@ -86,9 +90,11 @@ class Academy extends Mixins([Baz, AggregateRoot])
 	{
 		super();
 		this.bar = new Baz.Bar();
+		this.uniqueList.add('a')
+		this.uniqueList.add('b')
+		this.uniqueList.add('b')
 	}
 
-	static Test = class {}
 }
 
 test('test', t => {
@@ -107,6 +113,17 @@ test('test', t => {
 test('automapping', t => {
 	registerClassForPersistence(Academy);
 
+	registerMapping((key, value) => {
+		if(value instanceof Set)
+			return Array.from(value)
+		return undefined;
+	}, (key, value, dest) => {
+		if(dest[key] instanceof Set)
+			return new Set(value);
+		return undefined;
+	})
+
+
 	let a = new Academy();
 	let mapped = autoMapToFirestore(a);
 	let unmapped = autoMapFromFirestore(mapped);
@@ -120,13 +137,16 @@ test('automapping', t => {
 	assert.equal(unmapped.bar.a, 1)
 
 	assert.equal(a.bar.barzy(), "barzy")
-	assert.equal(unmapped.bar.barzy(), "barzy")
+	assert.equal(unmapped.bar.barzy(), "barzy");
 
 	assert.equal(a.foozzy(), "foozzy")
 	assert.equal(unmapped.foozzy(), "foozzy")
 
 	assert.equal(a.bazzy(), "bazzy")
 	assert.equal(unmapped.bazzy(), "bazzy")
+
+	assert(a.uniqueList instanceof Set)
+	assert.equal(unmapped.uniqueList.size, 2)
 })
 
 

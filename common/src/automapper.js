@@ -4,7 +4,7 @@ let mappings = [];
 /**
  * 
  * @param {function} toFirestore A function of the form (key: string, value: object/primitive) => object/primitive. Return a mapped value or undefined to fallback to default mapping
- * @param {function} fromFirestore A function of the form (key: string, value: object/primitive) => object/primitive. Return a mapped value or undefined to fallback to default mapping
+ * @param {function} fromFirestore A function of the form (key: string, value: object/primitive, dest: object) => object/primitive. Return a mapped value or undefined to fallback to default mapping
  */
 export function registerMapping(toFirestore, fromFirestore)
 {
@@ -248,7 +248,7 @@ export function autoMapFromFirestore(obj)
 			let handled = false;
 			for(let mapping of mappings)
 			{
-				let result = mapping.fromFirestore(prop.key, prop.value)
+				let result = mapping.fromFirestore(prop.key, prop.value, prop.dest)
 				if(result !== undefined)
 				{
 					prop.destination[prop.key] = result;
