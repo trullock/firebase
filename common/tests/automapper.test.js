@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert";
-import { autoMapFromFirestore, autoMapToFirestore, registerClassForPersistence } from "../src/automapper.js";
+import { autoMapFromFirestore, autoMapToFirestore, registerClassForPersistence, registerMigration } from "../src/automapper.js";
 import { Mixins } from "../src/utils.js";
 
 class AggregateRoot
@@ -127,4 +127,34 @@ test('automapping', t => {
 
 	assert.equal(a.bazzy(), "bazzy")
 	assert.equal(unmapped.bazzy(), "bazzy")
+})
+
+
+test('migrations', t => {
+	registerClassForPersistence(Academy);
+	
+	// rename oldName to name
+	registerMigration(prop => prop.type == Academy && prop.key == "oldName", prop => prop.key = "name" )
+
+	registerMigration(prop => prop.type == Academy && prop.key == "oldBar", prop => {
+		prop.key = "bar"
+		prop.value._type = "Academy.Bar";
+	})
+
+	// rename bar.oldA to bar.a
+	registerMigration(prop => prop.type == Baz.Bar && prop.key == "oldA", prop => prop.key = "a" )
+
+	let mapped = {
+		_type: "Academy",
+		oldName: "the name",
+		oldBar: {
+			_type: "Academy.OldBar",
+			oldA: 1337
+		}
+	}
+	let unmapped = autoMapFromFirestore(mapped);
+
+	assert.equal(unmapped.d, 4)
+	assert(unmapped.bar instanceof Baz.Bar)
+	assert.equal(unmapped.bar.a, 1337)
 })

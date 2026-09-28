@@ -17,8 +17,8 @@ export function registerMapping(toFirestore, fromFirestore)
 let migrations = []
 /**
  * 
- * @param {function} shouldApply A function of the form (key: string, parent: object, value: object/primitive) => true/false. Return if the migration should apply or not
- * @param {function} apply A function of the form key: string, parent: object, value: object/primitive) => object/primitive. Migrate the value. Return undefined to disregard the value.
+ * @param {function} shouldApply A function of the form ({ key: string, parent: object, value: object/primitive, destination: object, type: class }) => true/false. Return if the migration should apply or not
+ * @param {function} apply A function of the form ({ key: string, parent: object, value: object/primitive, destination: object, type: class }) => object/primitive. Migrate the value. Return undefined to disregard the value.
  */
 export function registerMigration(shouldApply, apply)
 {
@@ -212,6 +212,7 @@ export function autoMapFromFirestore(obj)
 		let dest = {};
 		let mapping = null;
 
+		// does this living here mean it cant be migrated?
 		if(obj._type)
 		{
 			mapping = getClassMappingByName(obj._type)
@@ -219,28 +220,38 @@ export function autoMapFromFirestore(obj)
 		}
 
 		for(let [key, value] of Object.entries(obj))
-		{
-			if(key == '_type')
-				continue;
-			
-			if(mapping?.getters?.indexOf(key) > -1)
-				continue;
+		{	
+			let prop = {
+				key,
+				value,
+				parent: obj,
+				destination: dest, 
+				type: mapping?.type
+			}
 
 			for(let migration of migrations)
 			{
-				if(!migration.shouldApply(key, obj, value, dest, mapping?.type))
+				// shouldApply should not mutate prop object
+				if(!migration.shouldApply(prop))
 					continue;
 
-				value = migration.apply(key, obj, value, dest, mapping?.type);
+				// the intention is for the migration to mutate the prop object
+				migration.apply(prop);
 			}
+
+			if(prop.key == "_type")
+				continue;
+
+			if(mapping?.getters?.indexOf(prop.key) > -1)
+				continue;
 
 			let handled = false;
 			for(let mapping of mappings)
 			{
-				let result = mapping.fromFirestore(key, value)
+				let result = mapping.fromFirestore(prop.key, prop.value)
 				if(result !== undefined)
 				{
-					dest[key] = result;
+					prop.destination[prop.key] = result;
 					handled = true;
 					break;
 				}
@@ -248,9 +259,9 @@ export function autoMapFromFirestore(obj)
 
 			if(!handled)
 			{
-				let result = autoMapFromFirestore(value);
+				let result = autoMapFromFirestore(prop.value);
 				if(result != undefined)
-					dest[key] = result;
+					prop.destination[prop.key] = result;
 			}
 		}
 
