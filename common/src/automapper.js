@@ -17,8 +17,8 @@ export function registerMapping(toFirestore, fromFirestore)
 let migrations = []
 /**
  * 
- * @param {function} shouldApply A function of the form ({ key: string, parent: object, value: object/primitive, destination: object, type: class }) => true/false. Return if the migration should apply or not
- * @param {function} apply A function of the form ({ key: string, parent: object, value: object/primitive, destination: object, type: class }) => object/primitive. Migrate the value. Return undefined to disregard the value.
+ * @param {function} shouldApply A function of the form ({ key: string, parent: object, value: object/primitive, dest: object, type: class }) => true/false. Return if the migration should apply or not
+ * @param {function} apply A function of the form ({ key: string, parent: object, value: object/primitive, dest: object, type: class }) => object/primitive. Migrate the value. Return undefined to disregard the value.
  */
 export function registerMigration(shouldApply, apply)
 {
