@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-client",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Collection of firebase helpers",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
@@ -24,6 +24,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "firebase": "^11.6.1"
+    "firebase": "^13.1.0"
   }
 }

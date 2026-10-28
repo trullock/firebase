@@ -13,6 +13,18 @@ export function registerEventHandler(name, type, handler)
 	subscribe(type, handler, name)
 }
 
+
+let beforePublishHandlers = [];
+
+/**
+ * Registers a handler to be executed before publishing an event
+ * @param {function} handler (type, event) => void
+ */
+export function beforePublish(handler)
+{
+	beforePublishHandlers.push(handler);
+};
+
 /**
  * Publishes a domain event
  * @param {string} type Event type
@@ -20,7 +32,18 @@ export function registerEventHandler(name, type, handler)
  */
 export function publishEvent(type, event)
 {
-	debug(`Publishing event ${type}`, event)
+	for(let i = 0; i < beforePublishHandlers.length; i++)
+	{
+		try
+		{
+			beforePublishHandlers[i](type, event);
+		}
+		catch(e)
+		{
+			error(`Error executing beforePublish handler`, { error: e, handler: beforePublishHandlers[i], args: [type, event] });
+		}
+	}
+
 	return publish(type, event);
 }
 

@@ -1,6 +1,6 @@
-import { publish } from '@trullock/pubsub'
 import { error } from '../logging/logger.js';
 import { convertFromFirestore, convertToFirestore, firestorePath } from '@trullock/firebase-common';
+import { publishEvent } from '../cqrs/eventHandling.js';
 
 export async function getEntity(firestore, pathSegments, ctx)
 {
@@ -57,7 +57,7 @@ export async function saveEntity(firestore, entity, pathSegments)
 	for(let i = 0; i < events.length; i++)
 	{
 		// dont parellelise the publishing of different events, the 2nd event could depend on the side-effects of the first
-		let results = await publish(events[i].type, events[i].data);
+		let results = await publishEvent(events[i].type, events[i].data);
 		recursePromises(results);
 	}
 }
