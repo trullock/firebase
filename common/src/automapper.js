@@ -47,7 +47,10 @@ function getClassMappingByType(type)
 
 function getClassMappingByName(name)
 {
-	return classes[name] || null
+	if(classes[name])
+		return classes[name]
+	
+	throw new Error(`Could not deserialize type ${name}. Did you call registerClassForPersistence() or registerMapping()?`);
 }
 
 /**
