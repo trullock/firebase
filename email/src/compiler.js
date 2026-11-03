@@ -1,15 +1,47 @@
-// compile.mjs
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
-import { createSSRApp } from 'vue'
-import { renderToString } from '@vue/server-renderer'
 import {
 	parse,
 	compileScript,
 	compileTemplate,
-	compileStyle
+	rewriteDefault
 } from '@vue/compiler-sfc'
+import { init, parse as parseImports } from 'es-module-lexer/js'
+
+async function rewriteImports(code, srcFile, outFile) {
+	await init
+
+	const srcDir = path.dirname(path.resolve(srcFile))
+	const outDir = path.dirname(path.resolve(outFile))
+	const [imports] = parseImports(code)
+
+	let result = code
+	// Go backwards so earlier offsets stay valid as the string changes
+	for (const imp of [...imports].reverse())
+	{
+		// Skip import.meta and anything that isn't a plain string specifier
+		if (imp.type !== 'static' && imp.type !== 'dynamic')
+			continue
+
+		const spec = imp.specifier
+		if (!spec || !spec.startsWith('.'))
+			continue // leave 'vue', 'lodash', etc. alone
+
+		let target = path.resolve(srcDir, spec)
+
+		let rel = path.relative(outDir, target).split(path.sep).join('/')
+		if (!rel.startsWith('.'))
+			rel = './' + rel
+
+		// Static imports: start/end exclude the quotes.
+		// Dynamic imports: the range may include them, so preserve them if present.
+		const raw = code.slice(imp.start, imp.end)
+		const quote = /^['"`]/.test(raw) ? raw[0] : ''
+
+		result = result.slice(0, imp.start) + quote + rel + quote + result.slice(imp.end)
+	}
+	return result
+}
 
 export async function compileSFC(filename) {
 	const source = await fs.readFile(filename, 'utf8')
@@ -21,7 +53,8 @@ export async function compileSFC(filename) {
 		throw errors[0]
 
 	// 2. Script (handles both <script> and <script setup>)
-	const script = compileScript(descriptor, { id })
+	let script = compileScript(descriptor, { id })
+	// script = rewriteDefault(script.content, 'handleEvent')
 
 	const tpl = compileTemplate({
 		source: descriptor.template.content,
@@ -33,39 +66,17 @@ export async function compileSFC(filename) {
 	if (tpl.errors.length)
 		throw tpl.errors[0]
 
-	// 4. Optional: compile styles to plain CSS
-	const css = descriptor.styles
-		.map(s => compileStyle({ source: s.content, filename, id: `data-v-${id}`, scoped: s.scoped }).code)
-		.join('\n')
-
 	return { 
 		script: script.content, 
-		template: tpl.code,
-		css: css
+		template: tpl.code
 	}
 }
 
-export async function compileEmail(filename) {
-	const { script, template, css } = await compileSFC(filename)
+export async function compileEmail(filename, outDir) {
+	let { script, template } = await compileSFC(filename)
 
-	let scriptPath = path.join(path.dirname(filename), `.${path.basename(filename)}.compiled.script.js`)
-	await fs.writeFile(scriptPath, script)
-
-	let templatePath = path.join(path.dirname(filename), `.${path.basename(filename)}.compiled.template.js`)
-	await fs.writeFile(templatePath, template)
+	let outPath = path.join(outDir, `${path.parse(filename).name}.js`)
+	let output = script + '\n' + template;
+	output = await rewriteImports(output, filename, outPath)
+	await fs.writeFile(outPath, output)
 }
-
-// // Write the compiled module next to the project so `import 'vue'` resolves
-// async function loadComponent(filename) {
-// 	const { code, css } = await compileSFC(filename)
-// 	const out = path.join(path.dirname(filename), `.${path.basename(filename)}.compiled.mjs`)
-// 	await fs.writeFile(out, code)
-// 	const mod = await import(pathToFileURL(out).href + `?t=${Date.now()}`) // cache-bust
-// 	return { component: mod.default, css }
-// }
-
-// // Usage
-// const { component, css } = await loadComponent('./Hello.vue')
-// const html = await renderToString(createSSRApp(component, { name: 'World' }))
-// console.log(html)
-// console.log(css)

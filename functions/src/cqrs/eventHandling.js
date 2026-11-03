@@ -61,7 +61,7 @@ setLogger((message, args) =>
 	log(message, args);
 });
 
-async function loadModule(handlerPath, type)
+async function loadEventHandler(handlerPath, type)
 {
 	let module = await import(handlerPath)
 
@@ -86,22 +86,7 @@ export function listAllHandlers()
 	return [...allHandlers];
 }
 
-export async function registerEventHandlers(root, filter)
-{
-	const p = path.resolve(root);
-	const files = await fs.promises.readdir(p, { recursive: true });
-
-	let eventHandlers = files.filter(filter)
-	for(let handler of eventHandlers)
-	{
-		let handlerPath = path.join(root, handler);
-		let eventName = path.basename(handlerPath, '.js')
-		await loadModule(handlerPath, eventName)
-		allHandlers.push({ handlerPath, eventName, lazy: false })
-	}
-}
-
-export async function registerLazyEventHandlers(root, filter)
+export async function registerEventHandlers(root, filter, lazy = true, loader = loadEventHandler)
 {
 	const p = path.resolve(root);
 	const files = await fs.promises.readdir(p, { recursive: true });
@@ -113,24 +98,34 @@ export async function registerLazyEventHandlers(root, filter)
 		let handlerPath = path.join(root, handler);
 		let eventName = path.basename(handlerPath, '.js')
 
-		if(!lazyHandlers[eventName])
-			lazyHandlers[eventName] = { loaded: false, handlers: [] };
+		if(lazy)
+		{
+			if(!lazyHandlers[eventName])
+				lazyHandlers[eventName] = { loaded: false, handlers: [] };
+			lazyHandlers[eventName].handlers.push(handlerPath)
+		}
+		else
+		{
+			await loader(handlerPath, eventName)
+		}
 
-		lazyHandlers[eventName].handlers.push(handlerPath)
-		allHandlers.push({ handlerPath, eventName, lazy: true })
+		allHandlers.push({ handlerPath, eventName, lazy })
 	}
 
-	beforePublish(async (type, event) => {
-		if(!lazyHandlers[type])
-			return;
+	if(lazy)
+	{
+		beforePublish(async (type, event) => {
+			if(!lazyHandlers[type])
+				return;
 
-		if(lazyHandlers[type].loaded)
-			return;
+			if(lazyHandlers[type].loaded)
+				return;
 
-		await Promise.all(lazyHandlers[type].handlers.map(async handlerPath => {
-			await loadModule(handlerPath, type)
-		}))
+			await Promise.all(lazyHandlers[type].handlers.map(async handlerPath => {
+				await loader(handlerPath, type)
+			}))
 
-		lazyHandlers[type].loaded = true;
-	})
+			lazyHandlers[type].loaded = true;
+		})
+	}
 }
