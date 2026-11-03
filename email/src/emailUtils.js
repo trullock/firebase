@@ -2,8 +2,7 @@
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import inlineCss from 'inline-css'
 import { JSDOM } from 'jsdom'
-import { error, warn } from "@trullock/firebase-functions";
-//import { environment, getHelpEmail, getHostPrefix } from "../../../../src/site.config.js";
+import { environment, error, warn } from "@trullock/firebase-functions";
 import { SESClient } from "@aws-sdk/client-ses";
 import { fromEnv } from "@aws-sdk/credential-providers";
 import { createSSRApp } from 'vue'
@@ -33,7 +32,7 @@ function sesClient() {
 export async function sendEmail(contentHtml, contentText, to, subject, source, tags, replyTos){
 
 	tags = tags || [];
-	// tags.push({ Name: 'env', Value: environment() })
+	tags.push({ Name: 'env', Value: environment() })
 
 	let command = new SendEmailCommand({
 		Destination: {
@@ -55,8 +54,8 @@ export async function sendEmail(contentHtml, contentText, to, subject, source, t
 				Data: subject
 			},
 		},
-		Source: (source ? source + ' @ ' : '') + 'ivelop <help@ivelop.me>',
-		ReplyToAddresses: (replyTos && replyTos.length) ? replyTos : [ 'ivelop <help@ivelop.me>' ],
+		Source: source,
+		ReplyToAddresses: replyTos,
 		Tags: tags
 	});
 	
@@ -76,20 +75,27 @@ export async function sendEmail(contentHtml, contentText, to, subject, source, t
 	}
 }
 
-export async function renderVueEmail(ssrRender, data)
+export async function renderVueEmail(wrapperModule, renderBody, data)
 {
-	// data.host = data.host || getHostPrefix()
-	// data.helpEmail = data.helpEmail || getHelpEmail()
-
 	// render html version
 	data.mode = 'html'
-	const contentsApp = createSSRApp({ data: () => data, ssrRender });
+	const contentsApp = createSSRApp({ data: () => data, ssrRender: renderBody });
 	contentsApp.config.compilerOptions.comments = true;
 	contentsApp.config.compilerOptions.whitespace = 'preserve';
 	const contents_html = await renderToString(contentsApp);
 
 	// render html wrapper
-	const wrapperApp = createSSRApp({ data: () => ({ data, body: contents_html }), template: template_wrapper });
+	const wrapperData = await wrapperModule.default();
+	
+	wrapperData.to = data.to
+	wrapperData.subject = data.subject
+	wrapperData.source = data.source;
+	wrapperData.replyTos = data.replyTos;
+
+	wrapperData.mode = 'html';
+	wrapperData.data = Object.assign(wrapperData.data, data.data);
+	wrapperData.body = contents_html;
+	const wrapperApp = createSSRApp({ data: () => wrapperData, ssrRender: wrapperModule.ssrRender });
 	wrapperApp.config.compilerOptions.comments = true;
 	wrapperApp.config.compilerOptions.whitespace = 'preserve';
 	let html = await renderToString(wrapperApp);
@@ -113,14 +119,21 @@ export async function renderVueEmail(ssrRender, data)
 	});
 
 	// render text version
-	const textApp = createSSRApp({ data: () => ({ data, mode: 'text' }), ssrRender });
-	textApp.config.compilerOptions.comments = true;
-	textApp.config.compilerOptions.whitespace = 'preserve';
-	let contents_text = await renderToString(textApp);
+	
+	data.mode = 'text'
+	let contents_text = await renderToString(contentsApp);
 	contents_text = contents_text.replaceAll(/<\/?template>/g, '').replace(/<!--\[-->|<!--\]-->|<!---->/g, '');
+	wrapperData.body = contents_text;
+	wrapperData.mode = 'text';
+	let text = await renderToString(wrapperApp);
+	text = text.replaceAll(/<\/?template>/g, '').replace(/<!--\[-->|<!--\]-->|<!---->/g, '');
+
+	delete wrapperData.mode;
+	delete wrapperData.body;
 
 	return {
 		html: `<!DOCTYPE html>\n${dom.window.document.documentElement.outerHTML}`,
-		text: contents_text
+		text: text,
+		data: wrapperData
 	};
 }

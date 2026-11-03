@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-email",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "description": "",
   "exports": {
     ".": "./src/index.js"
@@ -21,7 +21,7 @@
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1133.0",
     "@aws-sdk/credential-providers": "^3.962.0",
-    "@trullock/firebase-functions": "^2.5.0",
+    "@trullock/firebase-functions": "^2.6.0",
     "@vue/server-renderer": "^3.5.44",
     "es-module-lexer": "^3.0.4",
     "inline-css": "^4.0.3",

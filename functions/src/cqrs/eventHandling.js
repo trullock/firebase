@@ -68,17 +68,19 @@ async function loadEventHandler(handlerPath, type)
 	if(!module.default)
 		return;
 
-	let blocking = module.blocking === true
+	// let blocking = module.blocking === true
 
 	log(`Registering event handler for '${handlerPath}' and event type '${type}'`)
-	registerEventHandler(`${handlerPath}`, type, async e => {
-		let result = module.default(e);
-		// all handlers are unawaited by default
-		if(blocking)
-			await result;
-		else
-			result.catch(err => error('Error executing lazy event handler', { error: err, handlerPath, e}))
-	})
+	// registerEventHandler(`${handlerPath}`, type, async e => {
+	// 	let result = module.default(e);
+	// 	// all handlers are unawaited by default
+	// 	if(blocking)
+	// 		await result;
+	// 	else
+	// 		result.catch(err => error('Error executing lazy event handler', { error: err, handlerPath, e}))
+	// })
+
+	registerEventHandler(`${handlerPath}`, type, module.default);
 }
 
 export function listAllHandlers()

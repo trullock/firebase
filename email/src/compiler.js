@@ -3,8 +3,7 @@ import path from 'node:path'
 import {
 	parse,
 	compileScript,
-	compileTemplate,
-	rewriteDefault
+	compileTemplate
 } from '@vue/compiler-sfc'
 import { init, parse as parseImports } from 'es-module-lexer/js'
 
@@ -79,4 +78,5 @@ export async function compileEmail(filename, outDir) {
 	let output = script + '\n' + template;
 	output = await rewriteImports(output, filename, outPath)
 	await fs.writeFile(outPath, output)
+	return outPath;
 }
