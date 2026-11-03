@@ -1,5 +1,9 @@
 import { subscribe, publish, setErrorHandler, setLogger } from '@trullock/pubsub'
-import { log, debug, error } from '../logging/logger.js';
+import { log, error } from '../logging/logger.js';
+import fs from 'fs';
+import path from 'path'
+
+let allHandlers = []
 
 /**
  * Registers a listener to domain events.
@@ -30,13 +34,13 @@ export function beforePublish(handler)
  * @param {string} type Event type
  * @param {object} event The event data
  */
-export function publishEvent(type, event)
+export async function publishEvent(type, event)
 {
 	for(let i = 0; i < beforePublishHandlers.length; i++)
 	{
 		try
 		{
-			beforePublishHandlers[i](type, event);
+			await Promise.resolve(beforePublishHandlers[i](type, event));
 		}
 		catch(e)
 		{
@@ -56,3 +60,77 @@ setLogger((message, args) =>
 {
 	log(message, args);
 });
+
+async function loadModule(handlerPath, type)
+{
+	let module = await import(handlerPath)
+
+	if(!module.default)
+		return;
+
+	let blocking = module.blocking === true
+
+	log(`Registering event handler for '${handlerPath}' and event type '${type}'`)
+	registerEventHandler(`${handlerPath}`, type, async e => {
+		let result = module.default(e);
+		// all handlers are unawaited by default
+		if(blocking)
+			await result;
+		else
+			result.catch(err => error('Error executing lazy event handler', { error: err, handlerPath, e}))
+	})
+}
+
+export function listAllHandlers()
+{
+	return [...allHandlers];
+}
+
+export async function registerEventHandlers(root, filter)
+{
+	const p = path.resolve(root);
+	const files = await fs.promises.readdir(p, { recursive: true });
+
+	let eventHandlers = files.filter(filter)
+	for(let handler of eventHandlers)
+	{
+		let handlerPath = path.join(root, handler);
+		let eventName = path.basename(handlerPath, '.js')
+		await loadModule(handlerPath, eventName)
+		allHandlers.push({ handlerPath, eventName, lazy: false })
+	}
+}
+
+export async function registerLazyEventHandlers(root, filter)
+{
+	const p = path.resolve(root);
+	const files = await fs.promises.readdir(p, { recursive: true });
+
+	let lazyHandlers = { }
+	let lazyEventHandlers = files.filter(filter)
+	for(let handler of lazyEventHandlers)
+	{
+		let handlerPath = path.join(root, handler);
+		let eventName = path.basename(handlerPath, '.js')
+
+		if(!lazyHandlers[eventName])
+			lazyHandlers[eventName] = { loaded: false, handlers: [] };
+
+		lazyHandlers[eventName].handlers.push(handlerPath)
+		allHandlers.push({ handlerPath, eventName, lazy: true })
+	}
+
+	beforePublish(async (type, event) => {
+		if(!lazyHandlers[type])
+			return;
+
+		if(lazyHandlers[type].loaded)
+			return;
+
+		await Promise.all(lazyHandlers[type].handlers.map(async handlerPath => {
+			await loadModule(handlerPath, type)
+		}))
+
+		lazyHandlers[type].loaded = true;
+	})
+}
