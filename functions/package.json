@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-functions",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Collection of firebase helpers",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
@@ -11,7 +11,8 @@
     "url": "git+https://github.com/trullock/firebase.git"
   },
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./testing/firestore": "./tests/persistence/firestore.js"
   },
   "module": "./src/index.js",
   "license": "MIT",

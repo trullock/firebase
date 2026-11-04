@@ -66,7 +66,7 @@ export function deleteEntity(firestore, pathSegments, deleteChildren)
 {
 	let path = firestorePath(pathSegments);
 	if(deleteChildren)
-		return firestore.doc(path).deleteRecursive();
+		return firestore.recursiveDelete(firestore.doc(path));
 	else
 		return firestore.doc(path).delete();
 }
@@ -135,7 +135,7 @@ export function deleteProjection(firestore, pathSegments, deleteChildren)
 {
 	let path = firestorePath(pathSegments);
 	if(deleteChildren)
-		return firestore.doc(path).deleteRecursive();
+		return firestore.recursiveDelete(firestore.doc(path));
 	else
 		return firestore.doc(path).delete();
 }
