@@ -67,7 +67,7 @@ export async function sendEmail(contentHtml, contentText, to, subject, source, t
 	}
 	catch (err)
 	{
-		if(err.message.indexOf("Developer' is not authorized to perform 'ses:SendEmail'"))
+		if(err?.message?.includes("Developer' is not authorized to perform 'ses:SendEmail'"))
 			warn(`Developer is not authorized to perform 'ses:SendEmail' to ${to}`);
 		else
 			error(`Error sending email to ${to}`, {error: err});
