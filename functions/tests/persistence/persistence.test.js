@@ -1,6 +1,6 @@
 import { beforeEach, describe, test } from "node:test";
 import assert from "node:assert";
-import { Timestamp } from "firebase-admin/firestore";
+import { Filter, Timestamp } from "firebase-admin/firestore";
 import { registerClassForPersistence, registerMapping } from "@trullock/firebase-common";
 import AggregateRoot from "../../src/cqrs/aggregateRoot.js";
 import CommandContext from "../../src/cqrs/commandContext.js";
@@ -696,6 +696,12 @@ describe('queryProjections', () => {
 		assert.equal(results.length, 1);
 	});
 
+	test('supports Filter.or', async () => {
+		const results = await queryProjections(fs, 'scores', q => q.where(Filter.or(Filter.where('n', '==', 1), Filter.where('n', '==', 3))));
+
+		assert.deepStrictEqual(results, [{ n: 1 }, { n: 3 }]);
+	});
+
 	test('returns everything for a pass-through filter', async () => {
 		assert.equal((await queryProjections(fs, 'scores', q => q)).length, 3);
 	});
@@ -731,6 +737,12 @@ describe('deleteQuery', () => {
 		await deleteQuery(fs, 'scores', q => q.where('n', '==', 2));
 
 		assert.equal(await exists('scores/b/children/c'), true);
+	});
+
+	test('supports Filter.or', async () => {
+		await deleteQuery(fs, 'scores', q => q.where(Filter.or(Filter.where('n', '==', 1), Filter.where('n', '==', 2))));
+
+		assert.deepStrictEqual(await ids('scores'), []);
 	});
 
 	test('resolves with a result for each deletion', async () => {
