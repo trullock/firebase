@@ -1,0 +1,35 @@
+{
+  "name": "@trullock/firebase-build",
+  "version": "1.0.0",
+  "description": "Builds what Firebase functions built on @trullock/firebase-functions would otherwise compile or parse at runtime: email .vues, the event handler and script lists",
+  "homepage": "https://github.com/trullock/firebase#readme",
+  "bugs": {
+    "url": "https://github.com/trullock/firebase/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trullock/firebase.git"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./paths": "./src/paths.js"
+  },
+  "bin": {
+    "firebase-build": "./src/cli.js"
+  },
+  "module": "./src/index.js",
+  "license": "MIT",
+  "author": "Trullock",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\""
+  },
+  "dependencies": {
+    "@babel/parser": "^7.29.13",
+    "@vue/compiler-sfc": "^3.5.45",
+    "es-module-lexer": "^3.0.4"
+  }
+}

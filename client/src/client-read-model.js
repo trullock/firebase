@@ -1,4 +1,5 @@
 import { getFirestore, doc, getDoc, collection, getDocs, query, onSnapshot, where, documentId } from 'firebase/firestore'
+import { explainError } from './errors.js';
 import { convertFromFirestore, chunk, firestorePath } from '@trullock/firebase-common'
 
 /**
@@ -110,8 +111,15 @@ export async function getProjectionsById(pathSegments, ids)
 
 	let idChunks = chunk(ids, 10);
 	
-	// TODO: try catch
-	let chunkedSnapshots = await Promise.all(idChunks.map(ids => getDocs(query(ref, where(documentId(), 'in', ids)))))
+	let chunkedSnapshots;
+	try
+	{
+		chunkedSnapshots = await Promise.all(idChunks.map(ids => getDocs(query(ref, where(documentId(), 'in', ids)))))
+	}
+	catch(e)
+	{
+		throw explainError(e, `Failed to get ${path} by id`);
+	}
 	let projections = chunkedSnapshots.flatMap(snap => snap.docs.map(doc => convertFromFirestore(doc.data())))
 	return projections;
 }
@@ -289,24 +297,4 @@ export async function listenForFoundProjections(pathSegments, constraints, array
 			reject(explainError(e, `Listening to collection ${ref}`))
 		});
 	});
-}
-
-
-export function explainError(e, message)
-{
-	if(e.name == 'FirebaseError')
-	{
-		if(e.code == 'permission-denied')
-		{
-			if(e.message.indexOf(' for \'list\' @ ') > -1)
-				return new Error('Firestore permissions error when getting collection\n' + message);
-
-			if(e.message.indexOf(' for \'get\' @ ') > -1)
-				return new Error('Firestore permissions error when getting document\n' + message);
-
-			return new Error('Firestore permissions error: ' + e.message + '\n' + message);
-		}
-	}
-
-	return e;
 }

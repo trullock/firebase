@@ -28,7 +28,7 @@ export function registerMigration(shouldApply, apply)
 	})
 }
 
-function getClassMappingByType(type)
+export function getClassMappingByType(type)
 {
 	for(let [key, value] of Object.entries(classes))
 	{

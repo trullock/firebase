@@ -86,8 +86,8 @@ function validateActionCodeSettings(settings, required)
 		throw authError('invalid-continue-uri');
 	}
 
-	if(required && settings.handleCodeInApp !== true)
-		throw authError('argument-error', 'As email link sign-in is being requested, "handleCodeInApp" must be true.');
+	if(settings.handleCodeInApp !== undefined && typeof settings.handleCodeInApp !== 'boolean')
+		throw authError('argument-error', '"ActionCodeSettings.handleCodeInApp" must be a boolean.');
 }
 
 /**
@@ -301,7 +301,8 @@ class AuthMock
 	}
 
 	/**
-	 * Unlike the other links, the user doesn't need to exist, as signing in with the link creates them
+	 * Unlike the other links, the user doesn't need to exist, as signing in with the link creates them, but settings are required.
+	 * The client SDK requires handleCodeInApp to be true, but the Admin SDK doesn't.
 	 */
 	async generateSignInWithEmailLink(email, actionCodeSettings)
 	{

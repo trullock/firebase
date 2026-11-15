@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-functions",
-  "version": "2.11.0",
+  "version": "3.0.0",
   "description": "Collection of firebase helpers",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
@@ -12,7 +12,9 @@
   },
   "exports": {
     ".": "./src/index.js",
-    "./testing/firestore": "./tests/persistence/firestore.js"
+    "./testing/firestore": "./tests/persistence/firestore.js",
+    "./testing/auth": "./tests/auth.js",
+    "./testing/storage": "./tests/storage.js"
   },
   "module": "./src/index.js",
   "license": "MIT",
@@ -28,6 +30,10 @@
     "@trullock/firebase-common": "^2.1.0",
     "@trullock/pubsub": "^2.4.0",
     "firebase-admin": "^14.5.0",
-    "firebase-functions": "^7.4.0"
+    "firebase-functions": "^7.4.0",
+    "@trullock/router": "^1.1.0"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
   }
 }

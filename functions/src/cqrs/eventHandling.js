@@ -68,17 +68,7 @@ async function loadEventHandler(handlerPath, type)
 	if(!module.default)
 		return;
 
-	// let blocking = module.blocking === true
-
 	log(`Registering event handler for '${handlerPath}' and event type '${type}'`)
-	// registerEventHandler(`${handlerPath}`, type, async e => {
-	// 	let result = module.default(e);
-	// 	// all handlers are unawaited by default
-	// 	if(blocking)
-	// 		await result;
-	// 	else
-	// 		result.catch(err => error('Error executing lazy event handler', { error: err, handlerPath, e}))
-	// })
 
 	registerEventHandler(`${handlerPath}`, type, module.default);
 }
@@ -88,7 +78,7 @@ export function listAllHandlers()
 	return [...allHandlers];
 }
 
-export async function registerEventHandlers(root, filter, lazy = true, loader = loadEventHandler)
+export async function registerEventHandlers(root, filter, lazy = true)
 {
 	const p = path.resolve(root);
 	const files = await fs.promises.readdir(p, { recursive: true });
@@ -108,7 +98,7 @@ export async function registerEventHandlers(root, filter, lazy = true, loader = 
 		}
 		else
 		{
-			await loader(handlerPath, eventName)
+			await loadEventHandler(handlerPath, eventName)
 		}
 
 		allHandlers.push({ handlerPath, eventName, lazy })
@@ -124,7 +114,7 @@ export async function registerEventHandlers(root, filter, lazy = true, loader = 
 				return;
 
 			await Promise.all(lazyHandlers[type].handlers.map(async handlerPath => {
-				await loader(handlerPath, type)
+				await loadEventHandler(handlerPath, type)
 			}))
 
 			lazyHandlers[type].loaded = true;

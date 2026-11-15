@@ -1,7 +1,7 @@
 {
   "name": "@trullock/firebase-email",
-  "version": "1.4.0",
-  "description": "",
+  "version": "2.0.0",
+  "description": "Renders and sends emails from compiled Vue email handlers, with digests, for Firebase functions built on @trullock/firebase-functions",
   "exports": {
     ".": "./src/index.js"
   },
@@ -12,20 +12,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "directories": {
-    "test": "tests"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.1133.0",
-    "@aws-sdk/credential-providers": "^3.962.0",
-    "@trullock/firebase-functions": "^2.6.0",
-    "@vue/server-renderer": "^3.5.44",
-    "es-module-lexer": "^3.0.4",
+    "@trullock/firebase-build": "^1.0.0",
+    "@trullock/firebase-common": "^2.1.0",
+    "@trullock/firebase-functions": "^3.0.0",
     "inline-css": "^4.0.3",
-    "jsdom": "^26.1.0",
-    "vue": "^3.5.44"
+    "jsdom": "^26.1.0"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-ses": "^3.0.0",
+    "vue": "^3.5.0"
   }
 }

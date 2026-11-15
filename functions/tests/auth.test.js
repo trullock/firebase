@@ -298,15 +298,16 @@ describe('email action links', () => {
 		assert.deepStrictEqual(auth.actionLinks, []);
 	});
 
-	test('sign in links don\'t need an existing user, but require settings with handleCodeInApp', async () => {
+	test('sign in links don\'t need an existing user, but require settings', async () => {
 		const link = await auth.generateSignInWithEmailLink('new@example.com', { url: 'https://app.example.com/', handleCodeInApp: true });
+		await auth.generateSignInWithEmailLink('new@example.com', { url: 'https://app.example.com/' });
 
 		assert.equal(query(link).get('mode'), 'signIn');
 		assert.equal(auth.actionLinks[0].email, 'new@example.com');
 
 		await assert.rejects(auth.generateSignInWithEmailLink('new@example.com'), code('missing-continue-uri'));
-		await assert.rejects(auth.generateSignInWithEmailLink('new@example.com', { url: 'https://app.example.com/' }), code('argument-error'));
-		await assert.rejects(auth.generateSignInWithEmailLink('new@example.com', { url: 'not a url', handleCodeInApp: true }), code('invalid-continue-uri'));
+		await assert.rejects(auth.generateSignInWithEmailLink('new@example.com', { url: 'not a url' }), code('invalid-continue-uri'));
+		await assert.rejects(auth.generateSignInWithEmailLink('new@example.com', { url: 'https://app.example.com/', handleCodeInApp: 'yes' }), code('argument-error'));
 	});
 });
 
