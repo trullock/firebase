@@ -1,7 +1,7 @@
 {
   "name": "@trullock/firebase-build",
-  "version": "1.1.0",
-  "description": "Builds what Firebase functions built on @trullock/firebase-functions would otherwise compile or parse at runtime: email .vues, the event handler, script and migration lists",
+  "version": "1.2.0",
+  "description": "Builds what Firebase functions built on @trullock/firebase-functions would otherwise compile or parse at runtime: email .vues, the event handler, script and migration lists; and a webpack loader generating a frontend's page list",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
     "url": "https://github.com/trullock/firebase/issues"
@@ -12,7 +12,8 @@
   },
   "exports": {
     ".": "./src/index.js",
-    "./paths": "./src/paths.js"
+    "./paths": "./src/paths.js",
+    "./page-list-loader": "./src/pageListLoader.js"
   },
   "bin": {
     "firebase-build": "./src/cli.js"
