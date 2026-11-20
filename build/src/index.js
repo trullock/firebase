@@ -5,16 +5,18 @@ import { resolveConfig } from './config.js';
 import { compileVue } from './compileVue.js';
 import { findEventHandlers } from './eventHandlers.js';
 import { findScripts } from './scripts.js';
+import { findMigrations } from './migrations.js';
 
 export { buildPaths } from './paths.js';
 export { defaults, resolveConfig } from './config.js';
 export { compileVue } from './compileVue.js';
 export { findEventHandlers } from './eventHandlers.js';
 export { findScripts } from './scripts.js';
+export { findMigrations } from './migrations.js';
 
 /**
  * Builds what would otherwise be compiled or parsed at runtime into config.outDir: each .vue file under
- * config.sourceDir compiled to a module, and, if configured, the lists of event handlers by how they run and of scripts.
+ * config.sourceDir compiled to a module, and, if configured, the lists of event handlers by how they run, of scripts and of migrations in the order they run.
  * Only what's changed is written, and anything else in outDir is removed.
  * @param {object} [config] what differs from the defaults in config.js
  * @param {string} [config.root] the directory the other paths are relative to
@@ -23,6 +25,7 @@ export { findScripts } from './scripts.js';
  * @param {{ compilerOptions?: object }} [config.vue]
  * @param {{ folder?: string, output?: string }|false} [config.eventHandlers]
  * @param {{ folder?: string, output?: string }|false} [config.scripts]
+ * @param {{ folder?: string, output?: string }|false} [config.migrations]
  */
 export async function build(config)
 {
@@ -38,6 +41,9 @@ export async function build(config)
 
 	if(config.scripts)
 		outputs.set(output(config.scripts.output), JSON.stringify(findScripts(sourceDir, config.scripts), null, '\t'));
+
+	if(config.migrations)
+		outputs.set(output(config.migrations.output), JSON.stringify(findMigrations(sourceDir, config.migrations), null, '\t'));
 
 	let vueFiles = fs.readdirSync(sourceDir, { recursive: true }).filter(f => f.endsWith('.vue'));
 	for(let file of vueFiles)

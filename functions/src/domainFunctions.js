@@ -60,7 +60,8 @@ export const registeredFunctions = {
 	apis: [],
 	scheduled: [],
 	subscribers: [],
-	scripts: []
+	scripts: [],
+	migrations: []
 }
 
 // e.g. users-account-changeName is users/<type>/account/changeName.js
@@ -580,4 +581,15 @@ export async function runScript(name, ctx)
 
 	let module = await import(script.filePath);
 	return await module.default(ctx);
+}
+
+/**
+ * Registers migrations, run once each by runPendingMigrations (see migrations.js), as [{ name, file }] in the order they
+ * run, by path relative to domainDir. A migration default exports `async function(ctx)`, and must be safe to run again,
+ * as a run can end before recording that it succeeded.
+ */
+export function registerMigrations(migrations)
+{
+	for(let { name, file } of migrations)
+		registeredFunctions.migrations.push({ name, filePath: domainFile(file) });
 }

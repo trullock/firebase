@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-functions",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Collection of firebase helpers",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
@@ -24,7 +24,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test \"tests/**/*.test.js\""
   },
   "dependencies": {
     "@trullock/firebase-common": "^2.1.0",

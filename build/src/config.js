@@ -1,6 +1,6 @@
 /**
  * The build's defaults: a config only needs what differs. Paths are relative to root, by default the working directory.
- * eventHandlers or scripts set to false aren't listed.
+ * eventHandlers, scripts or migrations set to false aren't listed.
  */
 export const defaults = {
 	sourceDir: 'domain',
@@ -15,6 +15,10 @@ export const defaults = {
 	scripts: {
 		folder: 'scripts',
 		output: 'scripts.json'
+	},
+	migrations: {
+		folder: 'migrations',
+		output: 'migrations.json'
 	}
 };
 
@@ -27,6 +31,7 @@ export function resolveConfig(config = {})
 		root: config.root ?? process.cwd(),
 		vue: section('vue'),
 		eventHandlers: section('eventHandlers'),
-		scripts: section('scripts')
+		scripts: section('scripts'),
+		migrations: section('migrations')
 	};
 }
