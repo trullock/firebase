@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-functions",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Collection of firebase helpers",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
@@ -14,7 +14,10 @@
     ".": "./src/index.js",
     "./testing/firestore": "./tests/persistence/firestore.js",
     "./testing/auth": "./tests/auth.js",
-    "./testing/storage": "./tests/storage.js"
+    "./testing/storage": "./tests/storage.js",
+    "./testing": "./tests/harness.js",
+    "./testing/functions": "./tests/functions.js",
+    "./testing/setup": "./tests/setup.js"
   },
   "module": "./src/index.js",
   "license": "MIT",
