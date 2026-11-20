@@ -1,19 +1,21 @@
-import { getStorage }  from 'firebase-admin/storage';
+/**
+ * Each takes the Storage to use, e.g. firebase-admin's getStorage() or a mock in tests, and uses its default bucket
+ */
 
-export function uploadFileBase64(name, base64, contentType)
+// base64 is a PNG data URL: its 22 character prefix, data:image/png;base64, is dropped
+export function uploadFileBase64(storage, name, base64, contentType)
 {
-	return uploadFileBuffer(name, Buffer.from(base64.substr(22), 'base64'), contentType)
+	return uploadFileBuffer(storage, name, Buffer.from(base64.substr(22), 'base64'), contentType)
 }
 
-export function uploadFileUtf8(name, utf8, contentType)
+export function uploadFileUtf8(storage, name, utf8, contentType)
 {
-	return uploadFileBuffer(name, Buffer.from(utf8, 'utf8'), contentType);
+	return uploadFileBuffer(storage, name, Buffer.from(utf8, 'utf8'), contentType);
 }
 
-export async function uploadFileBuffer(name, buffer, contentType)
+export async function uploadFileBuffer(storage, name, buffer, contentType)
 {
-	let bucket = getStorage().bucket();
-	let file = bucket.file(name)
+	let file = storage.bucket().file(name)
 	await file.save(buffer, {
 		gzip: 'auto',
 		contentType: contentType
@@ -21,14 +23,15 @@ export async function uploadFileBuffer(name, buffer, contentType)
 	return file;
 }
 
-export async function getFile(path)
+/**
+ * The file at path, or null if there isn't one
+ */
+export async function getFile(storage, path)
 {
-	let bucket = getStorage().bucket();
-	let file = bucket.file(path)
+	let file = storage.bucket().file(path)
 
-	let exists = await file.exists();
-
-	if(!exists[0])
+	let [exists] = await file.exists();
+	if(!exists)
 		return null;
 
 	return file;
