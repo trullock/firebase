@@ -1,0 +1,63 @@
+name: Publish
+
+# Publishes every package whose version is newer than the one on npm, as a trusted publisher (no token or 2FA code)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency: publish
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.pending.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - id: pending
+        run: |
+          packages=$(node .github/pending.mjs)
+          echo "packages=$(echo $packages)" >> "$GITHUB_OUTPUT"
+          echo "To publish: ${packages:-nothing}"
+      - env:
+          PACKAGES: ${{ steps.pending.outputs.packages }}
+        run: |
+          for package in $PACKAGES; do
+            echo "::group::$package"
+            (cd "$package" && npm install --ignore-scripts --no-audit --no-fund && npm test --if-present)
+            echo "::endgroup::"
+          done
+
+  # installs nothing, so no dependency's code runs where it could publish
+  publish:
+    needs: test
+    if: github.ref == 'refs/heads/main' && needs.test.outputs.packages != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+      - env:
+          PACKAGES: ${{ needs.test.outputs.packages }}
+        run: |
+          for package in $PACKAGES; do
+            npm publish "./$package" --ignore-scripts
+          done

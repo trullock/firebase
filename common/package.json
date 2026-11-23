@@ -21,7 +21,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node ./tests/test.js"
+    "test": "node --test \"tests/**/*.test.js\""
   },
   "dependencies": {
   }

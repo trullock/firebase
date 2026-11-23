@@ -16,7 +16,7 @@
     "./page-list-loader": "./src/pageListLoader.js"
   },
   "bin": {
-    "firebase-build": "./src/cli.js"
+    "firebase-build": "src/cli.js"
   },
   "module": "./src/index.js",
   "license": "MIT",
