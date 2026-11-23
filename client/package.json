@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-client",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "description": "Collection of firebase helpers",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
@@ -23,7 +23,12 @@
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\""
   },
-  "dependencies": {
+  "peerDependencies": {
+    "@trullock/firebase-common": "^2.1.0",
+    "firebase": "^13.1.0"
+  },
+  "devDependencies": {
+    "@trullock/firebase-common": "^2.1.0",
     "firebase": "^13.1.0"
   }
 }
