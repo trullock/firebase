@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-email",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Renders and sends emails from compiled Vue email handlers, with digests, for Firebase functions built on @trullock/firebase-functions",
   "exports": {
     ".": "./src/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@trullock/firebase-build",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Builds what Firebase functions built on @trullock/firebase-functions would otherwise compile or parse at runtime: email .vues, the event handler, script and migration lists; and a webpack loader generating a frontend's page list",
   "homepage": "https://github.com/trullock/firebase#readme",
   "bugs": {
