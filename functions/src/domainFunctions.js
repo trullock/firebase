@@ -64,9 +64,19 @@ export const registeredFunctions = {
 	migrations: []
 }
 
+// Clients choose this name and the file it names is imported before anything is authorized, so it mustn't be able to be a
+// URL (Node imports and runs data: URLs) or leave the domain folder
+function isFunctionName(name)
+{
+	return typeof name == 'string' && /^[A-Za-z0-9_]+(-[A-Za-z0-9_]+)+$/.test(name);
+}
+
 // e.g. users-account-changeName is users/<type>/account/changeName.js
 function getFilePath(type, name)
 {
+	if(!isFunctionName(name))
+		throw new Error(`Invalid function name ${name}`);
+
 	let [area, ...rest] = name.split('-');
 	return domainFile([area, type, ...rest].join('/') + '.js');
 }
@@ -243,6 +253,12 @@ export function callableFn(type, opts)
 		let fn = req.data.fn;
 		if(!fn)
 			return { success: false, error: 'Invalid request, ' + type + ' path missing'};
+
+		if(!isFunctionName(fn))
+		{
+			error('Invalid ' + type + ' name', { fn });
+			return { success: false, error: 'Invalid ' + type + ' invokation' };
+		}
 
 		let filePath = getFilePath(type + 's', fn)
 
@@ -452,7 +468,8 @@ export function apiFns(apiFns)
 				let result = router.parse(req.path)
 				if(!result)
 				{
-					// diabolical hack (that works on dev at least) to allow calling functions directly and not via hosting proxy
+					// a request through a hosting rewrite (which sets x-forwarded-host) has the full path, prefix included, but one made
+					// straight to the function's own URL, as in the emulator, has only the route
 					if(!req.headers["x-forwarded-host"] && prefix)
 						result = router.parse(prefix + req.path);
 
